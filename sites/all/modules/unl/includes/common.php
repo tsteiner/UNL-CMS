@@ -180,3 +180,59 @@ function unl_user_is_administrator() {
 
   return FALSE;
 }
+
+
+/**
+ * Look up the given user in the UNL Directory
+ * LDAP is tried first, with a fallback on peoplefinder.
+ * Returns an array with the following keys:
+ *   firstName
+ *   lastName
+ *   email
+ *   displayName
+ * @param string $username
+ * @return array|NULL
+ */
+function unl_get_directory_info($username) {
+  unl_load_zend_framework();
+  $user = array();
+
+  // First, try getting the info from LDAP.
+  try {
+    $ldap = new Unl_Ldap(unl_cas_get_setting('ldap_uri'));
+    $ldap->bind(unl_cas_get_setting('ldap_dn'), unl_cas_get_setting('ldap_password'));
+    $results = $ldap->search('dc=unl,dc=edu', 'uid=' . $username);
+    if (count($results) > 0) {
+      $result = $results[0];
+
+      $user['firstName'] = $result['givenname'][0];
+      $user['lastName'] = $result['sn'][0];
+      $user['email'] = $result['mail'][0];
+      $user['displayName'] = $result['displayname'][0];
+    }
+  }
+  catch (Exception $e) {
+    // don't do anything, just go on to try the peoplefinder method
+  }
+
+  // Next, if LDAP didn't work, try peoplefinder/directory service.
+  if (!isset($user['email'])) {
+    $xml = @file_get_contents('http://directory.unl.edu/service.php?format=xml&uid=' . $username);
+    if ($xml) {
+      $dom = new DOMDocument();
+      $dom->loadXML($xml);
+      $user['firstName'] = $dom->getElementsByTagName('givenName')->item(0)->textContent;
+      $user['lastName'] = $dom->getElementsByTagName('sn')->item(0)->textContent;
+      $user['email'] = $dom->getElementsByTagName('mail')->item(0)->textContent;
+      $user['displayName'] = $dom->getElementsByTagName('displayName')->item(0)->textContent;
+    }
+  }
+
+  // Finally, if peoplefinder didn't work either, just guess.
+  if ($username && !isset($user['email'])) {
+    $user['email'] = $username . '@unl.edu';
+  }
+
+  return $user;
+}
+
