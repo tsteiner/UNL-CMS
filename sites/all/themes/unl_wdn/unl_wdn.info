@@ -33,3 +33,5 @@ settings[sidebar_second_width] = 3
 settings[zen_forms] = 0
 settings[wdn_beta] = 0
 settings[unl_affiliate] = 0
+
+settings[title_display] = "%page_title% | %site_title% | University of Nebraska-Lincoln"

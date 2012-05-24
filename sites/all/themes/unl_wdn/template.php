@@ -69,13 +69,18 @@ function unl_wdn_preprocess_html(&$vars, $hook) {
   }
 
   // Set the <title> tag to UNL format: Page Title | Site Name | University of Nebraska–Lincoln
+  $title_display = theme_get_setting('title_display');
+  $page_title = $vars['head_title_array']['title'];
+  $site_title = $vars['head_title_array']['name'];
   if ($vars['is_front']) {
-    unset($vars['head_title_array']['title']);
+    $title_display = strtr($title_display, array('%site_title% |' => ''));
+    //$page_title = $site_title;
   }
-  if (variable_get('site_name') != 'University of Nebraska–Lincoln') {
-    $vars['head_title_array'] = array_merge($vars['head_title_array'], array('UNL' => 'University of Nebraska–Lincoln'));
-  }
-  $vars['head_title'] = check_plain(implode(' | ', $vars['head_title_array']));
+  $vars['head_title'] = strtr($title_display, array(
+    '%page_title%' => $page_title,
+    '%site_title%' => $site_title,
+  ));
+  $vars['head_title'] = check_plain($vars['head_title']);
 }
 
 /**

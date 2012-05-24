@@ -40,7 +40,20 @@ function unl_wdn_form_system_theme_settings_alter(&$form, &$form_state) {
       '#access' => theme_get_setting('unl_affiliate'),
     ),
   );
-
+  
+  $form['title_display'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Site Title Display'),
+    'title_display' => array(
+      '#type' => 'radios',
+      '#options' => array(
+        '%page_title% | %site_title% | University of Nebraska-Lincoln'  => 'Page Title | Site Title | University of Nebraska-Lincoln',
+        '%page_title% | University of Nebraska-Lincoln'                 => 'Page Title | University of Nebraska-Lincoln',
+      ),
+      '#default_value' => theme_get_setting('title_display'),
+    ),
+  );
+  
   $form['intermediate_breadcrumbs'] = array(
     '#type' => 'fieldset',
     '#title' => t('Intermediate Breadcrumbs'),
