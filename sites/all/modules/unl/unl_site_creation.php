@@ -836,6 +836,15 @@ function unl_page_alias_create($form, &$form_state) {
 }
 
 /**
+ * Form Validate: Create New Page Alias
+ * Remove any leading or trailing whitespace from the paths.
+ */
+function unl_page_alias_create_validate($form, &$form_state) {
+  $form_state['values']['from_uri'] = trim($form_state['values']['from_uri']);
+  $form_state['values']['to_uri'] = trim($form_state['values']['to_uri']);
+}
+
+/**
  * Form Submit: Create New Page Alias
  */
 function unl_page_alias_create_submit($form, &$form_state) {
