@@ -13,6 +13,9 @@ function unl_cas_enable() {
  * Implements hook_init().
  */
 function unl_cas_init() {
+  $GLOBALS['user'] = drupal_anonymous_user();
+  return;
+
   // If no one is claiming to be logged in while no one is actually logged in, we don't need CAS.
   if (!array_key_exists('unl_sso', $_COOKIE) && user_is_anonymous()) {
     return;
@@ -139,6 +142,9 @@ function unl_cas_validate_ticket() {
  */
 function unl_cas_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'user_login') {
+    drupal_set_message('Logins have been disabled while we migrate to our new host.', 'error');
+    $form = array('#parents' => array());
+    return;
     $cas = unl_cas_get_adapter();
     unset($_GET['destination']);
     drupal_goto($cas->getLoginUrl());
