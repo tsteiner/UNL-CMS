@@ -1246,3 +1246,23 @@ function unl_get_site_user_map($search_by, $username_or_role, $list_empty_sites 
 
   return $audit_map;
 }
+
+function unl_site_authorize()
+{
+  $query = drupal_get_query_parameters();
+  $updated = db_update('unl_sites')
+    ->fields(array('installed' => 0))
+    ->condition('nonce', $query['nonce'])
+    ->condition('installed', -1)
+    ->execute();
+  
+  if ($updated > 0) {
+    drupal_set_message('The site has been authorized and is scheduled to be created soon.');
+  }
+  else {
+    drupal_set_message('Sorry, that activation code is invalid or has already been used.', 'error');
+  }
+  
+  return array();
+  
+}

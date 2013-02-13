@@ -10,63 +10,75 @@ function unl_multisite_schema() {
       'description' => 'Table of tables to be programatically created',
       'fields' => array(
         'site_id' => array(
-        'type'     => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
+          'type'     => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
         ),
         'site_path' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'uri' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'installed' => array(
-        'type'     => 'int',
-        'not null' => TRUE,
-        'default'  => 0,
+          'type'     => 'int',
+          'not null' => TRUE,
+          'default'  => 0,
         ),
         'clean_url' => array(
-        'type'     => 'int',
-        'not null' => TRUE,
-        'default'  => 1,
+          'type'     => 'int',
+          'not null' => TRUE,
+          'default'  => 1,
         ),
         'db_prefix' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'site_admin' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'migration_url' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'migration_path' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
         'department' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
-        'default'  => '',
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
         ),
-
+        'authorizing_unit_head' => array(
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
+          'default'  => '',
+        ),
+        'nonce' => array(
+          'type'     => 'varchar',
+          'length'   => 32,
+          'not null' => TRUE,
+          'default'  => '',
+        ),
+  
       ),
       'primary key' => array('site_id'),
       'unique keys' => array(
@@ -75,34 +87,34 @@ function unl_multisite_schema() {
         'db_prefix' => array('db_prefix'),
       ),
     );
-
+  
     $schema['unl_sites_aliases'] = array(
       'description' => 'Table of URL aliases for UNL sites.',
       'fields' => array(
         'site_alias_id' => array(
-        'type'     => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
+          'type'     => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
         ),
         'site_id' => array(
-        'type'     => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
+          'type'     => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
         ),
         'base_uri' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
         ),
         'path' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
         ),
-        'installed' => array(
-        'type'     => 'int',
-        'not null' => TRUE,
-        'default'  => 0,
+          'installed' => array(
+          'type'     => 'int',
+          'not null' => TRUE,
+          'default'  => 0,
         ),
       ),
       'primary key' => array('site_alias_id'),
@@ -111,34 +123,34 @@ function unl_multisite_schema() {
       ),
       'foreign keys' => array(
         'aliased_site' => array(
-        'table'   => 'unl_sites',
-        'columns' => array('site_id' => 'site_id'),
+          'table'   => 'unl_sites',
+          'columns' => array('site_id' => 'site_id'),
         ),
       ),
     );
-
+  
     $schema['unl_page_aliases'] = array(
       'description' => 'Table of URL aliases for UNL pages.',
       'fields' => array(
         'page_alias_id' => array(
-        'type'     => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
+          'type'     => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
         ),
         'from_uri' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
         ),
         'to_uri' => array(
-        'type'     => 'varchar',
-        'length'   => 255,
-        'not null' => TRUE,
+          'type'     => 'varchar',
+          'length'   => 255,
+          'not null' => TRUE,
         ),
         'installed' => array(
-        'type'     => 'int',
-        'not null' => TRUE,
-        'default'  => 0,
+          'type'     => 'int',
+          'not null' => TRUE,
+          'default'  => 0,
         ),
       ),
       'primary key' => array('page_alias_id'),
@@ -146,7 +158,7 @@ function unl_multisite_schema() {
         'from_uri' => array('from_uri'),
       ),
     );
-
+  
     return $schema;
   }
 }
@@ -352,4 +364,22 @@ function unl_multisite_update_7110() {
 function unl_multisite_update_7111() {
   db_add_unique_key('unl_sites', 'uri', array('uri'));
   db_add_unique_key('unl_sites', 'db_prefix', array('db_prefix'));
+}
+
+/**
+ * Add fields to store the authorization info.
+ */
+function unl_multisite_update_7112() {
+  db_add_field('unl_sites', 'authorizing_unit_head', array(
+    'type'     => 'varchar',
+    'length'   => 255,
+    'not null' => TRUE,
+    'default'  => '',
+  ));
+  db_add_field('unl_sites', 'nonce', array(
+    'type'     => 'varchar',
+    'length'   => 32,
+    'not null' => TRUE,
+    'default'  => '',
+  ));
 }

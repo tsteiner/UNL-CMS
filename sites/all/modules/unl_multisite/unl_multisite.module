@@ -1,6 +1,6 @@
 <?php
 
-require_once  drupal_get_path('module', 'unl') . '/includes/common.php';
+require_once drupal_get_path('module', 'unl') . '/includes/common.php';
 
 /**
  * Implements hook_block_info()
@@ -85,6 +85,22 @@ Please let us know if you have suggestions or questions.
 Thank you,
 EOF;
 
+  }
+  
+  if ($key == 'authorization_request') {
+    $site = $params['site'];
+    $uri = $site['uri'];
+    $site_admin = $site['site_admin'];
+    $department = $site['department'];
+    
+    $confirmation_url = url('admin/sites/unl/authorize', array('query' => array('nonce' => $site['nonce'])));
+    
+    $message['subject'] = 'Authorize UNLcms site for ' . $department;
+    $message['body'][] = <<<EOF
+This is a test
+$confirmation_url
+Thanks!
+EOF;
   }
 }
 
@@ -177,6 +193,12 @@ function unl_multisite_menu() {
     'access callback' => TRUE,
     'file' => 'unl_site_creation.php',
   );
+  $items['admin/sites/unl/authorize'] = array(
+    'title' => 'Authorize Site Creation',
+    'page callback' => 'unl_site_authorize',
+    'access callback' => TRUE,
+    'file' => 'unl_site_creation.php',  
+  );
 
   return $items;
 }
@@ -249,6 +271,9 @@ function _unl_multisite_cron_import_wdn_registry_sites() {
     return;
   }
 
+  // Make sure we have access to unl_cas functions.
+  require_once drupal_get_path('module', 'unl_cas') . '/unl_cas.module';
+
   $wdn_registry_info = array(
     'database' => variable_get('unl_wdn_registry_database'),
     'username' => variable_get('unl_wdn_registry_username'),
@@ -283,20 +308,40 @@ function _unl_multisite_cron_import_wdn_registry_sites() {
     $db_prefix = _unl_multisite_create_db_prefix($site->department . '/' . $site->site_name);
 
     $sites_to_create[$site->id] = array(
-      'site_path' => $path,
-      'uri' => url($path),
-      'clean_url' => TRUE,
-      'db_prefix' => $db_prefix,
-      'site_admin' => $site->site_admin ? $site->site_admin : '',
-      'migration_url' => $site->migration_url ? $site->migration_url : '',
-      'migration_path' => $site->migration_path ? $site->migration_path : '',
-      'department' => $site->department,
+      'site_path'             => $path,
+      'uri'                   => url($path),
+      'installed'             => -1,
+      'clean_url'             => TRUE,
+      'db_prefix'             => $db_prefix,
+      'site_admin'            => $site->site_admin ? $site->site_admin : '',
+      'migration_url'         => $site->migration_url ? $site->migration_url : '',
+      'migration_path'        => $site->migration_path ? $site->migration_path : '',
+      'department'            => $site->department,
+      'authorizing_unit_head' => $site->authorizing_unit_head,
+      'nonce'                 => bin2hex(openssl_random_pseudo_bytes(16)),
     );
   }
+  
+  
 
   foreach ($sites_to_create as $wdn_site_id => $site_to_create) {
     try {
-      db_insert('unl_sites')->fields($site_to_create)->execute();
+      //db_insert('unl_sites')->fields($site_to_create)->execute();
+      if (!$site_to_create['authorizing_unit_head']) {
+        continue;
+      }
+      $authorizing_unit_head = user_load_by_name($site_to_create['authorizing_unit_head']);
+      if (!$authorizing_unit_head) {
+        $authorizing_unit_head = unl_cas_import_user($site_to_create['authorizing_unit_head']);
+      }
+      
+      if (!$authorizing_unit_head) {
+        continue;
+      }
+      echo $authorizing_unit_head->mail . PHP_EOL;
+      
+      drupal_mail('unl_multisite', 'authorization_request', 'tsteiner@nerdclub.net', language_default(), array('site' => $site_to_create), unl_shared_variable_get('site_mail'));
+      continue;
     }
     catch (PDOException $e) {
       // Ignore duplicate records.
