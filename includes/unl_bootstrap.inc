@@ -4,9 +4,21 @@
  * Special setup for UNL specific features.
  */
 function unl_bootstrap() {
+  unl_bootstrap_handle_trusted_proxy();
   unl_bootstrap_short_hostname_redirect();
   unl_bootstrap_multisite_without_symlinks();
   unl_bootstrap_proxy_pass_support();
+}
+
+/**
+ * If a trusted proxy (ie: running on localhost) set the X-Forwarded-For header,
+ * set REMOTE_ADDR to that address.
+ */
+
+function unl_bootstrap_handle_trusted_proxy() {
+  if ($_SERVER['REMOTE_ADDR'] == '127.0.0.1' && array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
+    $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+  }
 }
 
 /**
