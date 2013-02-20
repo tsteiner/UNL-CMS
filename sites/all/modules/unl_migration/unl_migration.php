@@ -54,6 +54,12 @@ function unl_migration($form, &$form_state)
         '#description' => t("Normally, this won't interfere with non-liferay sites. If you have a /web directory, you should turn this off."),
         '#default_value' => 1,
     );
+    $form['root']['use_batch'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use Drupal Batch System'),
+      '#description' => t('For larger sites, you may need to uncheck this to avoid issues with long batch jobs.'),
+      '#default_value' => 1,
+    );
 
     $form['submit'] = array(
         '#type' => 'submit',
@@ -71,9 +77,16 @@ function unl_migration_submit($form, &$form_state) {
     $form_state['values']['frontier_user'],
     $form_state['values']['frontier_pass'],
     $form_state['values']['ignore_duplicates'],
-    $form_state['values']['use_liferay_code']
+    $form_state['values']['use_liferay_code'],
+    $form_state['values']['use_batch']
   );
 
+  if (!$form_state['values']['use_batch']) {
+    header('Content-type: text/plain');
+    $migration->migrate(60*60*24*7);
+    exit;
+  }
+  
   $operations = array(
     array(
       'unl_migration_step',
@@ -165,6 +178,7 @@ class Unl_Migration_Tool
     private $_frontierFilesScanned = array();
     private $_ignoreDuplicates    = FALSE;
     private $_useLiferayCode      = TRUE;
+    private $_useBatch            = TRUE;
 
     /**
      * Keep track of the state of the migration progress so that we can resume later
@@ -179,7 +193,7 @@ class Unl_Migration_Tool
 
     private $_start_time;
 
-    public function __construct($baseUrl, $frontierPath, $frontierUser, $frontierPass, $ignoreDuplicates, $useLiferayCode = FALSE)
+    public function __construct($baseUrl, $frontierPath, $frontierUser, $frontierPass, $ignoreDuplicates, $useLiferayCode = FALSE, $useBatch = TRUE)
     {
         header('Content-type: text/plain');
 
@@ -207,6 +221,7 @@ class Unl_Migration_Tool
 
         $this->_ignoreDuplicates = (bool) $ignoreDuplicates;
         $this->_useLiferayCode = (bool) $useLiferayCode;
+        $this->_useBatch = (bool) $useBatch;
 
         $this->_baseUrl = $baseUrl;
         $this->_addSitePath('');
@@ -243,6 +258,7 @@ class Unl_Migration_Tool
 
       if ($this->_state == self::STATE_PROCESSING_PAGES) {
         // Process all of the pages on the site (Takes a while)
+        $lastStatusMessageTime = time();
         do {
           set_time_limit(max(30, $time_limit * 1.5));
 
@@ -257,6 +273,11 @@ class Unl_Migration_Tool
             catch (Exception $e) {
               $this->_log('An exception occured while processing "' . $pageToProcess . '": "' . $e->getMessage() . '".', WATCHDOG_ERROR);
             }
+            if (time() - $lastStatusMessageTime > 60) {
+              $this->_log($this->getMessage(), WATCHDOG_DEBUG);
+              $lastStatusMessageTime = time();
+            }
+            
           }
         } while (count($pagesToProcess) > 0);
 
@@ -1358,7 +1379,7 @@ class Unl_Migration_Tool
     {
       $this->_log[] = $message;
 
-      if ($severity == WATCHDOG_INFO) {
+      if (in_array($severity, array(WATCHDOG_INFO, WATCHDOG_DEBUG))) {
         $type = 'status';
       }
       else if ($severity == WATCHDOG_WARNING) {
@@ -1367,7 +1388,15 @@ class Unl_Migration_Tool
       else {
         $type = 'error';
       }
-      drupal_set_message(check_plain($message), $type, FALSE);
+
+      if ($this->_useBatch) {
+        if ($severity != WATCHDOG_DEBUG) {
+          drupal_set_message($message, $type, FALSE);
+        }
+      }
+      else {
+        echo ucfirst($type) . ': ' . $message . PHP_EOL; ob_flush(); flush();
+      }
 
       watchdog('unl migration', $message, NULL, $severity);
     }
