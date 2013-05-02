@@ -204,7 +204,7 @@ function unl_url_get_contents($url, $context = NULL, &$headers = array())
 {
   unl_load_zend_framework();
   if (!Zend_Uri::check($url)) {
-    drupal_set_message('A non-url was passed to ' . __FUNCTION__ . '().', 'warning');
+    watchdog('unl', 'A non-url was passed to %func().', array('%func' => __FUNCTION__), WATCHDOG_WARNING);
     return FALSE;
   }
   
@@ -217,13 +217,21 @@ function unl_url_get_contents($url, $context = NULL, &$headers = array())
   // If cached in the static array, return it.
   if (array_key_exists($url, $static)) {
     $headers = $static[$url]['headers'];
+
+    // Don't let this page be cached since it contains uncacheable content.
+    $GLOBALS['conf']['cache'] = FALSE;
+
     return $static[$url]['body'];
   }
   
-  // If cached in the drupla cache, return it.
+  // If cached in the drupal cache, return it.
   $data = cache_get(__FUNCTION__ . $url);
   if ($data && time() < $data->data['expires']) {
     $headers = $data->data['headers'];
+
+    // Don't let this page be cached any longer than the retrieved content.
+    $GLOBALS['conf']['page_cache_maximum_age'] = min(variable_get('page_cache_maximum_age', 0), $data->data['expires'] - time());
+
     return $data->data['body'];
   }
 
@@ -284,6 +292,9 @@ function unl_url_get_contents($url, $context = NULL, &$headers = array())
       'expires' => $expires,
     );
     cache_set(__FUNCTION__ . $url, $data, 'cache', $expires);
+
+    // Don't let this page be cached any longer than the retrieved content.
+    $GLOBALS['conf']['page_cache_maximum_age'] = min(variable_get('page_cache_maximum_age', 0), $expires - time());
   }
   // Otherwise just save to the static per-request cache
   else {
@@ -291,6 +302,9 @@ function unl_url_get_contents($url, $context = NULL, &$headers = array())
         'body' => $body,
         'headers' => $headers,
     );
+
+    // Don't let this page be cached since it contains uncacheable content.
+    $GLOBALS['conf']['cache'] = FALSE;
   }
   
   return $body;
